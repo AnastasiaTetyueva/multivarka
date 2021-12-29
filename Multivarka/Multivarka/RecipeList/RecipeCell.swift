@@ -15,7 +15,7 @@ import SnapKit
 class RecipeCell: UITableViewCell {
 
     //обработка значений после того, как модель придет в ячейку вместе с данными
-    var model: ModelRecipe? {
+    var model: Recipe? {
         didSet {
             title.text = model?.name
             if let previewIcon = model?.previewIcon, let previewIconURL = URL(string: previewIcon) {

@@ -10,7 +10,7 @@ import UIKit
 class RecipeShortTextCell: UITableViewCell {
 
     //обработка значений после того, как модель придет в ячейку вместе с данными
-    var model: ModelRecipe? {
+    var model: Recipe? {
         didSet {
             shortText.text = model?.shortText
         }

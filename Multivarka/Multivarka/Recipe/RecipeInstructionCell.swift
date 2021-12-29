@@ -10,7 +10,7 @@ import UIKit
 class RecipeInstructionCell: UITableViewCell {
 
     //обработка значений после того, как модель придет в ячейку вместе с данными
-    var model: ModelRecipe? {
+    var model: Recipe? {
         didSet {
             instruction.text = model?.text
         }

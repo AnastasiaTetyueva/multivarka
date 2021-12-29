@@ -9,7 +9,9 @@ import UIKit
 
 class RecipeVC: UITableViewController {
 
-    var model: ModelRecipe? {
+    var didUpdateModel: ((_ model: Recipe) -> ())?
+
+    var model: Recipe? {
         didSet {
             navigationItem.title = model?.name
         }
@@ -48,6 +50,10 @@ class RecipeVC: UITableViewController {
         case 0: // заголовок
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "RecipeHeaderCell", for: indexPath) as? RecipeHeaderCell else { return UITableViewCell() }
             cell.model = model
+            cell.didUpdateModel = { [weak self] (model) in
+                self?.model = model
+                self?.didUpdateModel?(model)
+            }
             return cell
         case 1: // картинка
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "RecipePictureCell", for: indexPath) as? RecipePictureCell else { return UITableViewCell() }

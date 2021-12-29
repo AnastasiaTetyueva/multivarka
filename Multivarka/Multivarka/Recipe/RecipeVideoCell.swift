@@ -11,7 +11,7 @@ import WebKit
 class RecipeVideoCell: UITableViewCell {
 
     //обработка значений после того, как модель придет в ячейку вместе с данными
-    var model: ModelRecipe? {
+    var model: Recipe? {
         didSet {
             guard let videoURL = model?.videoURL else { return } // не будем грузить видео, если ничего нет
             loadVideo(videoURL)

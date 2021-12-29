@@ -10,7 +10,7 @@ import UIKit
 class RecipePictureCell: UITableViewCell {
 
     //обработка значений после того, как модель придет в ячейку вместе с данными
-    var model: ModelRecipe? {
+    var model: Recipe? {
         didSet {
             if let image = model?.image, let imageURL = URL(string: image) {
                 picture.loadImage(url: imageURL)

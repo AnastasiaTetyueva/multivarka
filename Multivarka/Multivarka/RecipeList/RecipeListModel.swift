@@ -6,43 +6,48 @@
 //
 
 import Foundation
+import UIKit
 
 class RecipeListModel {
-    var categories: [ModelCategory] // все данные, связанные с рецептом. Только одни будут показываться в списке рецептов, другие в просмотре самого рецепта
-    
+    var categories: [Category] = [] // все данные, связанные с рецептом. Только одни будут показываться в списке рецептов, другие в просмотре самого рецепта
+    var categoryRecipes: [Int: [Recipe]] = [:]
+
     var showOnlyFavorites: Bool = false
     
-    init() {
-        categories = [ModelCategory(name: "Супы",
-                                    recipes: [ModelRecipe(name: "Гороховый",
-                                                         previewIcon: "https://img.povar.ru/main/e6/43/f2/09/gorohovii_sup_s_chesnokom_bistro-207168.jpg",
-                                                         text: "Замачиваем горох на 2 часа",
-                                                         image: "https://static.1000.menu/img/content/2353/gorohovji-sup-s-kuritsei_1495101742_8_max.jpg",
-                                                         shortText: "Такой суп вкусный, просто объедение",
-                                                         videoURL: "https://youtu.be/uyL9c-xfQy4",
-                                                         authorName: "Александр",
-                                                         date: "10.10.2020",
-                                                         duration: "150 мин.",
-                                                         portions: 15,
-                                                         likes: 10,
-                                                         isFavorite: false)]),
-                      ModelCategory(name: "Каши",
-                                    recipes: [ModelRecipe(name: "Перловая",
-                                                         previewIcon: "https://2recepta.com/recept/perlovaya-kasha/perlovaya-kasha.jpg",
-                                                         text: "Замачиваем перловую крупу на ночь",
-                                                         image: "https://www.eat-me.ru/wp-content/uploads/2017/09/perlovaya-kasha.jpg",
-                                                         shortText: "Каша на любителя",
-                                                         videoURL: "https://youtu.be/nCN-l4naM1w",
-                                                         authorName: "Александр",
-                                                         date: "10.10.2020",
-                                                         duration: "150 мин.",
-                                                         portions: 15,
-                                                         likes: 10000,
-                                                         isFavorite: true)])
+    var tableView: UITableView?
+    
+    func fetchData() {
+        CategoryControllerAPI.readUsingGET() { [weak self] (categories, error) in
+            print("categories: \(categories)")
+            self?.categories = categories ?? []
+            
+            var categoryRecipes: [Int: [Recipe]] = [:]
+            let group = DispatchGroup()
+            
+            for i in categories ?? [] {
+                group.enter()
+                RecipeControllerAPI.readUsingGET3(categoryId: i.id, isPreview: true, isFavorite: self?.showOnlyFavorites ?? false) { (recipes, error) in
+                    print("recipes: \(recipes)")
+                    categoryRecipes[i.id] = recipes
+                    
+                    
+                    group.leave()
+                }
+            }
+            
+            group.notify(queue: .main) {
+                self?.categoryRecipes = categoryRecipes
+                self?.tableView?.reloadData()
+            }
+        }
         
-        ]
     }
-
+    
+    init() {
+        
+    }
+    
+    
     func numberOfSections() -> Int {
         return categories.count
     }
@@ -51,9 +56,18 @@ class RecipeListModel {
         return getSectionRecipes(section).count
     }
     
-    func getSectionRecipes(_ section: Int) -> [ModelRecipe] {
-        return categories[section].recipes.filter { (recipe) -> Bool in
-            return recipe.isFavorite || !showOnlyFavorites
-        }
+    func getSectionRecipes(_ section: Int) -> [Recipe] {
+        let categoryId = categories[section].id
+        return categoryRecipes[categoryId] ?? []
+    }
+    
+    func updateRecipeModel(_ model: Recipe) {
+        let tmp = categoryRecipes[model.categoryId]
+        let recipes = tmp?.reduce([Recipe](), { (result, i) -> [Recipe] in
+            var result = result
+            result.append((i.id == model.id) ? model : i)
+            return result
+        })
+        categoryRecipes[model.categoryId] = recipes
     }
 }

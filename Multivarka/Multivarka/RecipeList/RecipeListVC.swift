@@ -20,6 +20,8 @@ class RecipeListVC: UITableViewController {
         super.viewDidLoad()
         model?.showOnlyFavorites = self.showOnlyFavorites
 
+        model?.tableView = tableView
+        
         //регистрирую для данной таблицы, что я буду в ней использовать данный тип ячеек
         tableView.register(RecipeCell.self, forCellReuseIdentifier: "reuseIdentifier")
         
@@ -39,7 +41,7 @@ class RecipeListVC: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // если ячейка приходит несовместимая с RecipeCell, то возвращаем пустую стандартную таблицу
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath) as? RecipeCell else { return UITableViewCell() }
-        let recipe = model?.categories[indexPath.section].recipes[indexPath.row]
+        let recipe = model?.getSectionRecipes(indexPath.section)[indexPath.row]
         cell.model = recipe
         return cell
     }
@@ -57,6 +59,10 @@ class RecipeListVC: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let recipe = model?.getSectionRecipes(indexPath.section)[indexPath.row]
         let recipeVC = RecipeVC()
+        recipeVC.didUpdateModel = { [weak self] (model) in
+            self?.model?.updateRecipeModel(model)
+            self?.tableView.reloadData()
+        }
         recipeVC.model = recipe
         navigationController?.pushViewController(recipeVC, animated: true)
     }
@@ -65,7 +71,7 @@ class RecipeListVC: UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         model?.showOnlyFavorites = self.showOnlyFavorites
-        tableView.reloadData()
+        model?.fetchData()
     }
 
 }

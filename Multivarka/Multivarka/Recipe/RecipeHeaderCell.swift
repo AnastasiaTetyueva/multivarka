@@ -10,7 +10,7 @@ import UIKit
 class RecipeHeaderCell: UITableViewCell {
 
 //обработка значений после того, как модель придет в ячейку вместе с данными
-   var model: ModelRecipe? {
+   var model: Recipe? {
        didSet {
         authorNameLabel.text = model?.authorName
         dateLabel.text = model?.date
@@ -22,7 +22,7 @@ class RecipeHeaderCell: UITableViewCell {
     }
     
     // обновленное состояние модели (чтобы сохранять нажатое состояние кнопки добавления в Избранное)
-    var didUpdateModel: ((_ model: ModelRecipe) -> ())?
+    var didUpdateModel: ((_ model: Recipe) -> ())?
     
     lazy var authorImage: UIImageView = {
         let l = UIImageView()
@@ -105,18 +105,31 @@ class RecipeHeaderCell: UITableViewCell {
     }()
     
     @objc func favoritesClicked() {
-        model?.isFavorite = !(model?.isFavorite ?? false)
-        favoritesButton.isSelected = model?.isFavorite ?? false
-        if let model = model {
-            didUpdateModel?(model)
+        guard let model = model else { return }
+        RecipeControllerAPI.setIsFavoriteUsingPUT(id: model.id, isFavorite: !model.isFavorite) { [weak self] (result, err) in
+            var newModel = model
+            newModel.isFavorite = !model.isFavorite
+            DispatchQueue.main.async {
+                self?.model = newModel
+                self?.didUpdateModel?(newModel)
+            }
         }
     }
     
     @objc func likesClicked() {
-        model?.likes = (model?.likes ?? 0) + 1
-        likesLabel.text = "\(model?.likes ?? 0)"
-        if let model = model {
-            didUpdateModel?(model)
+        
+        guard let model = model else { return }
+        RecipeControllerAPI.addLikeUsingPUT(id: model.id) { [weak self] (result, err) in
+            guard let result = result else {
+                print("Got null result, must be backend error")
+                return
+            }
+            var newModel = model
+            newModel.likes = result
+            DispatchQueue.main.async {
+                self?.model = newModel
+                self?.didUpdateModel?(newModel)
+            }
         }
     }
         
